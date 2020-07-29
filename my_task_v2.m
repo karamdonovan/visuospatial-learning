@@ -12,10 +12,41 @@ black = BlackIndex(screenNumber);
 
 respCell = cell(1, 7);
 
+[window, windowRect] = PsychImaging('OpenWindow', screenNumber, black);
+[screenXpixels, screenYpixels] = Screen('WindowSize', window);
+[xCenter, yCenter] = RectCenter(windowRect);
+ifi = Screen('GetFlipInterval', window);
+
+top = [0 0 100 100];
+bottom = [0 0 100 100];
+right = [0 0 100 100];
+left = [0 0 100 100];
+colors = [1 0 0; 0 0 1; 0 0.7 0; 0.8 0.8 0];
+
+vbl = Screen('Flip', window);
+waitframes = 1;
+
+topPriorityLevel = MaxPriority(window);
+Priority(topPriorityLevel);
+
+isiTimeSecs = 1;
+isiTimeFrames = round(isiTimeSecs / ifi);
+
+topKey = KbName('UpArrow');
+bottomKey = KbName('DownArrow');
+leftKey = KbName('LeftArrow');
+rightKey = KbName('RightArrow');
+
+topRect = CenterRectOnPointd(top, 960, 270);
+bottomRect = CenterRectOnPointd(bottom, 960, 810);
+leftRect = CenterRectOnPointd(left, 480, 540);
+rightRect = CenterRectOnPointd(right, 1440, 540);
+rects = vertcat(topRect, bottomRect, leftRect, rightRect);
+
 %% complete task
-%for round = 1:length(respCell)
+for round = 1:length(respCell)
     % generate random sequence
-    seq = zeros(1,4);
+    seq = zeros(1,round + 3);
     for i = 1:length(seq)
         seq(i) = randi(4);
         while i > 1 && seq(i) == seq(i - 1)
@@ -23,43 +54,13 @@ respCell = cell(1, 7);
         end
     end
 
-    [window, windowRect] = PsychImaging('OpenWindow', screenNumber, black);
-    [screenXpixels, screenYpixels] = Screen('WindowSize', window);
-    [xCenter, yCenter] = RectCenter(windowRect);
-    ifi = Screen('GetFlipInterval', window);
-
-    top = [0 0 100 100];
-    bottom = [0 0 100 100];
-    right = [0 0 100 100];
-    left = [0 0 100 100];
-    colors = [1 0 0; 0 0 1; 0 0.7 0; 0.8 0.8 0];
-
-    vbl = Screen('Flip', window);
-    waitframes = 1;
-
-    topPriorityLevel = MaxPriority(window);
-    Priority(topPriorityLevel);
-
-    isiTimeSecs = 1;
-    isiTimeFrames = round(isiTimeSecs / ifi);
-
     respMat = zeros(2, length(seq));
-
-    topKey = KbName('UpArrow');
-    bottomKey = KbName('DownArrow');
-    leftKey = KbName('LeftArrow');
-    rightKey = KbName('RightArrow');
 
     colorPattern = zeros(length(seq), 3);
     for i = 1:length(colorPattern)
         colorPattern(i, :) = colors(seq(i),:);
     end
 
-    topRect = CenterRectOnPointd(top, 960, 270);
-    bottomRect = CenterRectOnPointd(bottom, 960, 810);
-    leftRect = CenterRectOnPointd(left, 480, 540);
-    rightRect = CenterRectOnPointd(right, 1440, 540);
-    rects = vertcat(topRect, bottomRect, leftRect, rightRect);
     rectPattern = zeros(length(seq), 4);
     for i = 1:length(rectPattern)
         rectPattern(i, :) = rects(seq(i),:);
@@ -123,9 +124,12 @@ respCell = cell(1, 7);
         end
         respMat(1, i) = seq(i);
         respMat(2, i) = response;
-
+        
     end
-%end
+    
+    respCell{1,round} = respMat;
+    
+end
 
 DrawFormattedText(window, 'Experiment Finished \n\n Press any key to exit', 'center', 'center', white);
 Screen('Flip', window);
